@@ -1,6 +1,6 @@
 ---
-- name: Include default variables
-  include_vars:
+- name: Include_default_variables
+  ansible.builtin.include_vars:
     file: ../../../../vars/main.yml
 
 - name: Create VPC for Jenkins
@@ -9,9 +9,9 @@
     region: "{{ aws_region }}"
     name: "{{ vpc_name }}"
     cidr_block: "{{ vpc_cidr }}"
-    dns_hostnames: yes
-    dns_support: yes
-    multi_ok: no
+    dns_hostnames: true
+    dns_support: true
+    multi_ok: false
     tenancy: default
     profile: "{{ aws_profile }}"
     tags:
@@ -54,14 +54,14 @@
     state: present
     lookup: id
     route_table_id: "{{ jenkins_route_table.route_tables[0].id }}"
-    vpc_id: "{{ jenkins_vpc.vpc.id}}"
+    vpc_id: "{{ jenkins_vpc.vpc.id }}"
     profile: "{{ aws_profile }}"
     region: "{{ aws_region }}"
     tags:
       Name: "jenkins_route_table_{{ jenkins_vpc.vpc.id }}"
     subnets:
-        - "{{ jenkins_vpc_subnets.results[0].subnet.id }}"
-        - "{{ jenkins_vpc_subnets.results[1].subnet.id }}"
+      - "{{ jenkins_vpc_subnets.results[0].subnet.id }}"
+      - "{{ jenkins_vpc_subnets.results[1].subnet.id }}"
     routes:
       - dest: 0.0.0.0/0
         gateway_id: "{{ jenkins_igw.gateway_id }}"
@@ -70,30 +70,26 @@
 - name: Create vpc security groups
   ec2_group:
     state: present
-    profile: "{{ aws_profile}}"
+    profile: "{{ aws_profile }}"
     region: "{{ aws_region }}"
     vpc_id: "{{ jenkins_vpc.vpc.id }}"
     name: "jenkins_sg_{{ jenkins_vpc.vpc.id }}"
     description: "jenkins security group for {{ jenkins_vpc.vpc.id }}"
     rules:
       - proto: tcp
-        ports:
-        - 80
+        ports: 80
         cidr_ip: 0.0.0.0/0
         rule_desc: allow all on port 80
       - proto: tcp
-        ports:
-        - 8080
+        ports: 8080
         cidr_ip: 0.0.0.0/0
         rule_desc: allow all on port 8080
       - proto: tcp
-        ports:
-        - 443
+        ports: 443
         cidr_ip: 0.0.0.0/0
         rule_desc: allow all on port 443
       - proto: tcp
-        ports:
-        - 22
+        ports: 22
         cidr_ip: 0.0.0.0/0
         rule_desc: allow all on port 22
   register: jenkins_sg
@@ -111,7 +107,7 @@
     network:
       assign_public_ip: true
       delete_on_termination: true
-    wait: yes
+    wait: true
     volumes:
       - device_name: /dev/xvda
         ebs:
@@ -122,8 +118,6 @@
     tags:
       app: jenkins
   register: jenkins_ec2_instance
-- debug:
-    var: jenkins_ec2_instance
 
 - name: Sleep for 60 seconds and continue with play
   ansible.builtin.wait_for:
@@ -138,8 +132,6 @@
       "tag:app": "jenkins"
       "instance-state-name": "running"
   register: jenkins_ec2_running_instances
-- debug:
-    var: jenkins_ec2_running_instances
 
 - name: Sleep for 30 seconds and continue with play
   ansible.builtin.wait_for:
@@ -152,7 +144,7 @@
     region: "{{ aws_region }}"
     device_id: "{{ jenkins_ec2_running_instances.instances[0].instance_id }}"
     ip: "{{ elastic_ip }}"
-    allow_reassociation: yes
+    allow_reassociation: true
 
 - name: Sleep for 30 seconds and continue with play
   ansible.builtin.wait_for:
@@ -164,10 +156,10 @@
     state: present
     profile: "{{ aws_profile }}"
     type: A
-    overwrite: yes
+    overwrite: true
     value:
       - "{{ jenkins_ec2_running_instances.instances[0].public_ip_address }}"
-    wait: yes
+    wait: true
     zone: "{{ domain }}"
     record: "{{ sub_domain }}"
     ttl: 300
@@ -185,8 +177,6 @@
       "tag:app": "jenkins"
       "instance-state-name": "running"
   register: jenkins_ec2_existing_instances
-- debug:
-    var: jenkins_ec2_existing_instances
 
 - name: Sleep for 30 seconds and continue with play
   ansible.builtin.wait_for:
@@ -198,10 +188,10 @@
     state: present
     profile: "{{ aws_profile }}"
     type: A
-    overwrite: yes
+    overwrite: true
     value:
       - "{{ jenkins_ec2_existing_instances.instances[0].public_ip_address }}"
-    wait: yes
+    wait: true
     zone: "{{ domain }}"
     record: "{{ sub_domain }}"
     ttl: 300
@@ -212,7 +202,7 @@
   delegate_to: localhost
 
 - name: Wait for SSH to start
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ jenkins_ec2_existing_instances.instances[0].public_ip_address }}"
     port: 22
     timeout: 60
@@ -223,6 +213,6 @@
   delegate_to: localhost
 
 - name: Add the machine to the inventory
-  add_host:
+  ansible.builtin.add_host:
     hostname: 'ubuntu@{{ jenkins_ec2_existing_instances.instances[0].public_ip_address }}'
     groups: "{{ group_name }}"

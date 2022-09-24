@@ -4,9 +4,9 @@ aws_profile: ghactions
 ec2_image: ami-06e770ce48e0bc0f9
 ec2_instance_type: t2.micro
 ec2_keypair: ubuntu
-# domain: vinitharsora.me
-# sub_domain: jenkins.vinitharsora.me
-vpc_name: "jenkins-{{ aws_region}}-vpc"
+domain: harshaljaiswal.me
+sub_domain: jenkins.harshaljaiswal.me
+vpc_name: "jenkins-{{ aws_region }}-vpc"
 vpc_cidr: 10.0.0.0/16
 vpc_subnets:
   public-1:
@@ -35,8 +35,8 @@ vpc_security_groups:
         cidr_ip: 0.0.0.0/0
         ports:
           - 22
-public_ip: "{{ lookup('env','IP') }}"
-# elastic_ip: 34.232.222.240
+public_ip: "{{ lookup('env', 'IP') }}"
+elastic_ip: 18.213.191.13
 # group_name: vinit
 group_name: Harshil
 email: jaiswal.ha@northeastern.edu

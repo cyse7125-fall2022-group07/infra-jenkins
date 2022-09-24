@@ -1,6 +1,6 @@
 ---
 - name: Include default variables
-  include_vars:
+  ansible.builtin.include_vars:
     file: ../../../../vars/main.yml
 
 - name: Collect EC2 Instances
@@ -18,7 +18,7 @@
     region: "{{ aws_region }}"
     state: absent
     instance_ids: "{{ item.instance_id }}"
-    wait: yes
+    wait: true
   with_items: "{{ jenkins_collected_instances.instances }}"
 
 - name: Get VPC for Jenkins
@@ -27,9 +27,9 @@
     region: "{{ aws_region }}"
     name: "{{ vpc_name }}"
     cidr_block: "{{ vpc_cidr }}"
-    dns_hostnames: yes
-    dns_support: yes
-    multi_ok: no
+    dns_hostnames: true
+    dns_support: true
+    multi_ok: false
     tenancy: default
     profile: "{{ aws_profile }}"
     tags:
@@ -62,7 +62,7 @@
 - name: "Delete vpc security groups"
   ec2_group:
     state: absent
-    profile: "{{ aws_profile}}"
+    profile: "{{ aws_profile }}"
     region: "{{ aws_region }}"
     vpc_id: "{{ jenkins_vpc.vpc.id }}"
     name: "jenkins_sg_{{ jenkins_vpc.vpc.id }}"
@@ -80,9 +80,9 @@
     region: "{{ aws_region }}"
     name: "{{ vpc_name }}"
     cidr_block: "{{ vpc_cidr }}"
-    dns_hostnames: yes
-    dns_support: yes
-    multi_ok: no
+    dns_hostnames: true
+    dns_support: true
+    multi_ok: false
     tenancy: default
     profile: "{{ aws_profile }}"
     tags:
