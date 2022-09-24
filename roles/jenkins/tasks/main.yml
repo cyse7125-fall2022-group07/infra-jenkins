@@ -1,0 +1,55 @@
+---
+- name: Include default variables
+  ansible.builtin.include_vars:
+    file: ../../../vars/main.yml
+
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    install_recommends: true
+  become: true
+
+- name: Add certbot apt repository
+  ansible.builtin.apt_repository:
+    repo: 'ppa:certbot/certbot'
+    state: present
+  become: true
+
+- name: Install certbot
+  ansible.builtin.apt:
+    name: python-certbot-nginx
+    state: present
+    install_recommends: true
+  become: true
+
+- name: Remove the default nginx config
+  ansible.builtin.file:
+    name: /etc/nginx/sites-enabled/default
+    state: absent
+  become: true
+
+- name: Copy the config file to required location
+  ansible.builtin.template:
+    src: nginx.config.j2
+    dest: "/etc/nginx/nginx.conf"
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+
+- name: Test Nginx
+  ansible.builtin.command: nginx -t
+  changed_when: false
+  become: true
+
+- name: Reload Nginx
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded
+  become: true
+
+- name: Use Certbot to generate certificates
+  ansible.builtin.command: certbot --nginx -n -d "{{ sub_domain }}" --email "{{ email }}" --agree-tos --redirect
+  changed_when: false
+  become: true
