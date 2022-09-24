@@ -36,7 +36,7 @@ vpc_security_groups:
         ports:
           - 22
 public_ip: "{{ lookup('env', 'IP') }}"
-elastic_ip: 18.213.191.13
+# elastic_ip: 18.213.191.13
 # group_name: vinit
 group_name: Harshil
 email: jaiswal.ha@northeastern.edu
