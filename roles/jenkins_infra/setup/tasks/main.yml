@@ -1,0 +1,228 @@
+---
+- name: Include default variables
+  include_vars:
+    file: ../../../../vars/main.yml
+
+- name: Create VPC for Jenkins
+  ec2_vpc_net:
+    state: present
+    region: "{{ aws_region }}"
+    name: "{{ vpc_name }}"
+    cidr_block: "{{ vpc_cidr }}"
+    dns_hostnames: yes
+    dns_support: yes
+    multi_ok: no
+    tenancy: default
+    profile: "{{ aws_profile }}"
+    tags:
+      Name: "jenkins"
+  register: jenkins_vpc
+
+- name: Create Internet Gateway
+  ec2_vpc_igw:
+    state: present
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    vpc_id: "{{ jenkins_vpc.vpc.id }}"
+    tags:
+      Name: "jenkins"
+  register: jenkins_igw
+
+- name: Create subnets
+  ec2_vpc_subnet:
+    state: present
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    az: "{{ item.value.az }}"
+    vpc_id: "{{ jenkins_vpc.vpc.id }}"
+    cidr: "{{ item.value.cidr }}"
+    tags:
+      Name: "jenkins_{{ item.value.az }}"
+  with_dict: "{{ vpc_subnets }}"
+  register: jenkins_vpc_subnets
+
+- name: Grab the route tables
+  ec2_vpc_route_table_info:
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    filters:
+      vpc-id: "{{ jenkins_vpc.vpc.id }}"
+  register: jenkins_route_table
+
+- name: Update the route table in the vpc
+  ec2_vpc_route_table:
+    state: present
+    lookup: id
+    route_table_id: "{{ jenkins_route_table.route_tables[0].id }}"
+    vpc_id: "{{ jenkins_vpc.vpc.id}}"
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    tags:
+      Name: "jenkins_route_table_{{ jenkins_vpc.vpc.id }}"
+    subnets:
+        - "{{ jenkins_vpc_subnets.results[0].subnet.id }}"
+        - "{{ jenkins_vpc_subnets.results[1].subnet.id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ jenkins_igw.gateway_id }}"
+  register: jenkins_route_table_updated
+
+- name: Create vpc security groups
+  ec2_group:
+    state: present
+    profile: "{{ aws_profile}}"
+    region: "{{ aws_region }}"
+    vpc_id: "{{ jenkins_vpc.vpc.id }}"
+    name: "jenkins_sg_{{ jenkins_vpc.vpc.id }}"
+    description: "jenkins security group for {{ jenkins_vpc.vpc.id }}"
+    rules:
+      - proto: tcp
+        ports:
+        - 80
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow all on port 80
+      - proto: tcp
+        ports:
+        - 8080
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow all on port 8080
+      - proto: tcp
+        ports:
+        - 443
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow all on port 443
+      - proto: tcp
+        ports:
+        - 22
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow all on port 22
+  register: jenkins_sg
+
+- name: Create EC2 instances
+  amazon.aws.ec2_instance:
+    name: jenkins-ec2-instance
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    image_id: "{{ ec2_image }}"
+    instance_type: "{{ ec2_instance_type }}"
+    key_name: "{{ ec2_keypair }}"
+    vpc_subnet_id: "{{ jenkins_vpc_subnets.results[0].subnet.id }}"
+    security_group: "jenkins_sg_{{ jenkins_vpc.vpc.id }}"
+    network:
+      assign_public_ip: true
+      delete_on_termination: true
+    wait: yes
+    volumes:
+      - device_name: /dev/xvda
+        ebs:
+          volume_size: 60
+          volume_type: gp2
+          delete_on_termination: true
+    exact_count: 1
+    tags:
+      app: jenkins
+  register: jenkins_ec2_instance
+- debug:
+    var: jenkins_ec2_instance
+
+- name: Sleep for 60 seconds and continue with play
+  ansible.builtin.wait_for:
+    timeout: 60
+  delegate_to: localhost
+
+- name: Gather EC2 instance facts
+  community.aws.ec2_instance_info:
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    filters:
+      "tag:app": "jenkins"
+      "instance-state-name": "running"
+  register: jenkins_ec2_running_instances
+- debug:
+    var: jenkins_ec2_running_instances
+
+- name: Sleep for 30 seconds and continue with play
+  ansible.builtin.wait_for:
+    timeout: 30
+  delegate_to: localhost
+
+- name: Associate an elastic IP
+  community.aws.ec2_eip:
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    device_id: "{{ jenkins_ec2_running_instances.instances[0].instance_id }}"
+    ip: "{{ elastic_ip }}"
+    allow_reassociation: yes
+
+- name: Sleep for 30 seconds and continue with play
+  ansible.builtin.wait_for:
+    timeout: 30
+  delegate_to: localhost
+
+- name: Update the sub-domain with associated Public IP in route53
+  route53:
+    state: present
+    profile: "{{ aws_profile }}"
+    type: A
+    overwrite: yes
+    value:
+      - "{{ jenkins_ec2_running_instances.instances[0].public_ip_address }}"
+    wait: yes
+    zone: "{{ domain }}"
+    record: "{{ sub_domain }}"
+    ttl: 300
+
+- name: Sleep for 60 seconds and continue with play
+  ansible.builtin.wait_for:
+    timeout: 30
+  delegate_to: localhost
+
+- name: Gather EC2 instance facts
+  community.aws.ec2_instance_info:
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    filters:
+      "tag:app": "jenkins"
+      "instance-state-name": "running"
+  register: jenkins_ec2_existing_instances
+- debug:
+    var: jenkins_ec2_existing_instances
+
+- name: Sleep for 30 seconds and continue with play
+  ansible.builtin.wait_for:
+    timeout: 30
+  delegate_to: localhost
+
+- name: Update the sub-domain with associated Elastic IP in route53
+  route53:
+    state: present
+    profile: "{{ aws_profile }}"
+    type: A
+    overwrite: yes
+    value:
+      - "{{ jenkins_ec2_existing_instances.instances[0].public_ip_address }}"
+    wait: yes
+    zone: "{{ domain }}"
+    record: "{{ sub_domain }}"
+    ttl: 300
+
+- name: Sleep for 10 seconds and continue with play
+  ansible.builtin.wait_for:
+    timeout: 10
+  delegate_to: localhost
+
+- name: Wait for SSH to start
+  wait_for:
+    host: "{{ jenkins_ec2_existing_instances.instances[0].public_ip_address }}"
+    port: 22
+    timeout: 60
+
+- name: Sleep for 30 seconds and continue with play
+  ansible.builtin.wait_for:
+    timeout: 30
+  delegate_to: localhost
+
+- name: Add the machine to the inventory
+  add_host:
+    hostname: 'ubuntu@{{ jenkins_ec2_existing_instances.instances[0].public_ip_address }}'
+    groups: "{{ group_name }}"
