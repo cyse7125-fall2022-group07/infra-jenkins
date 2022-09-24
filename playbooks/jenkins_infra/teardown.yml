@@ -1,0 +1,6 @@
+---
+- name: "Teardown AWS Networking Infrastructure"
+  hosts: localhost
+  gather_facts: false
+  roles:
+  - ../../roles/jenkins_infra/teardown
