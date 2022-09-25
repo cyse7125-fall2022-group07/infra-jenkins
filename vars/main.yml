@@ -1,11 +1,11 @@
 ---
 aws_region: us-east-1
 aws_profile: ghactions
-ec2_image: ami-06e770ce48e0bc0f9
+ec2_image: ami-02ef99cc81ab04082
 ec2_instance_type: t2.micro
-ec2_keypair: ubuntu
-domain: harshaljaiswal.me
-sub_domain: jenkins.harshaljaiswal.me
+ec2_keypair: ubuntu1
+domain: shrawanikarpe.me
+sub_domain: jenkins.shrawanikarpe.me
 vpc_name: "jenkins-{{ aws_region }}-vpc"
 vpc_cidr: 10.0.0.0/16
 vpc_subnets:
@@ -36,7 +36,7 @@ vpc_security_groups:
         ports:
           - 22
 public_ip: "{{ lookup('env', 'IP') }}"
-# elastic_ip: 18.213.191.13
+elastic_ip: 54.87.28.0
 # group_name: vinit
-group_name: Harshil
-email: jaiswal.ha@northeastern.edu
+group_name: webservers
+email: karpe.s@northeastern.edu
