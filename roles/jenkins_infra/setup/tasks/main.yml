@@ -41,7 +41,7 @@
   with_dict: "{{ vpc_subnets }}"
   register: jenkins_vpc_subnets
 
-- name: Grab the route tables
+- name: Grasp the route tables
   ec2_vpc_route_table_info:
     profile: "{{ aws_profile }}"
     region: "{{ aws_region }}"
@@ -124,6 +124,19 @@
     timeout: 60
   delegate_to: localhost
 
+- name: "Getting Reserved IP"
+  ec2_eip_info:
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    filters:
+      tag:Name: elastic-ip
+  register: ip4_address
+
+- name: Sleep for 10 seconds and continue with play
+  ansible.builtin.wait_for:
+    timeout: 10
+  delegate_to: localhost
+
 - name: Gather EC2 instance facts
   community.aws.ec2_instance_info:
     profile: "{{ aws_profile }}"
@@ -131,7 +144,7 @@
     filters:
       "tag:app": "jenkins"
       "instance-state-name": "running"
-  register: jenkins_ec2_running_instances
+  register: jenkins_existing_ec2_instances
 
 - name: Sleep for 30 seconds and continue with play
   ansible.builtin.wait_for:
@@ -142,14 +155,9 @@
   community.aws.ec2_eip:
     profile: "{{ aws_profile }}"
     region: "{{ aws_region }}"
-    device_id: "{{ jenkins_ec2_running_instances.instances[0].instance_id }}"
-    ip: "{{ elastic_ip }}"
+    device_id: "{{ jenkins_existing_ec2_instances.instances[0].instance_id }}"
+    public_ip: "{{ ip4_address.addresses[0].public_ip }}"
     allow_reassociation: true
-
-- name: Sleep for 30 seconds and continue with play
-  ansible.builtin.wait_for:
-    timeout: 30
-  delegate_to: localhost
 
 - name: Update the sub-domain with associated Public IP in route53
   route53:
@@ -158,61 +166,20 @@
     type: A
     overwrite: true
     value:
-      - "{{ jenkins_ec2_running_instances.instances[0].public_ip_address }}"
+      - "{{ ip4_address.addresses[0].public_ip }}"
     wait: true
     zone: "{{ domain }}"
     record: "{{ sub_domain }}"
     ttl: 300
-
-- name: Sleep for 60 seconds and continue with play
-  ansible.builtin.wait_for:
-    timeout: 30
-  delegate_to: localhost
-
-- name: Gather EC2 instance facts
-  community.aws.ec2_instance_info:
-    profile: "{{ aws_profile }}"
-    region: "{{ aws_region }}"
-    filters:
-      "tag:app": "jenkins"
-      "instance-state-name": "running"
-  register: jenkins_ec2_existing_instances
-
-- name: Sleep for 30 seconds and continue with play
-  ansible.builtin.wait_for:
-    timeout: 30
-  delegate_to: localhost
-
-- name: Update the sub-domain with associated Elastic IP in route53
-  route53:
-    state: present
-    profile: "{{ aws_profile }}"
-    type: A
-    overwrite: true
-    value:
-      - "{{ jenkins_ec2_existing_instances.instances[0].public_ip_address }}"
-    wait: true
-    zone: "{{ domain }}"
-    record: "{{ sub_domain }}"
-    ttl: 300
-
-- name: Sleep for 10 seconds and continue with play
-  ansible.builtin.wait_for:
-    timeout: 10
-  delegate_to: localhost
 
 - name: Wait for SSH to start
   ansible.builtin.wait_for:
-    host: "{{ jenkins_ec2_existing_instances.instances[0].public_ip_address }}"
+    host: "{{ ip4_address.addresses[0].public_ip }}"
     port: 22
     timeout: 60
 
-- name: Sleep for 30 seconds and continue with play
-  ansible.builtin.wait_for:
-    timeout: 30
-  delegate_to: localhost
-
 - name: Add the machine to the inventory
   ansible.builtin.add_host:
-    hostname: 'ubuntu@{{ jenkins_ec2_existing_instances.instances[0].public_ip_address }}'
+    hostname: 'ubuntu@{{ ip4_address.addresses[0].public_ip }}'
     groups: "{{ group_name }}"
+  when: jenkins_existing_ec2_instances.instances[0].instance_id is defined

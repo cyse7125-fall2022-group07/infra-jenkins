@@ -1,13 +1,13 @@
 ---
-aws_region: us-east-1
-aws_profile: ghactions
-ec2_image: ami-02ef99cc81ab04082
-ec2_instance_type: t2.micro
-ec2_keypair: ubuntu1
-domain: shrawanikarpe.me
-sub_domain: jenkins.shrawanikarpe.me
+aws_region: ""
+aws_profile: ""
+ec2_image: ""
+ec2_instance_type: ""
+ec2_keypair: ""
+domain: ""
+sub_domain: ""
 vpc_name: "jenkins-{{ aws_region }}-vpc"
-vpc_cidr: 10.0.0.0/16
+vpc_cidr: "10.0.0.0/16"
 vpc_subnets:
   public-1:
     cidr: 10.0.1.0/24
@@ -35,8 +35,5 @@ vpc_security_groups:
         cidr_ip: 0.0.0.0/0
         ports:
           - 22
-public_ip: "{{ lookup('env', 'IP') }}"
-elastic_ip: 54.87.28.0
-# group_name: vinit
-group_name: webservers
-email: karpe.s@northeastern.edu
+group_name: ""
+email: ""
