@@ -6,7 +6,7 @@
 ```
 ## Allocate Elastic IP
 ```shell
-- Manually Allocate an Eastic IP address for Jenkins instance and tag it appropriately using AWS console.
+- Manually Allocate an Eastic IP address to Jenkins instance and tag it appropriately using AWS console.
 ```
 ## Setup networking components such as VPC, subnets, route table, internet gateway, security groups and launch EC2 instance using following command:
 ```shell
