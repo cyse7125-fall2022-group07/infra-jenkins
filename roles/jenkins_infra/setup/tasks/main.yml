@@ -41,7 +41,7 @@
   with_dict: "{{ vpc_subnets }}"
   register: jenkins_vpc_subnets
 
-- name: Grasp the route tables
+- name: Grab the route tables
   ec2_vpc_route_table_info:
     profile: "{{ aws_profile }}"
     region: "{{ aws_region }}"

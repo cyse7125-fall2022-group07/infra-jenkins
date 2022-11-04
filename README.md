@@ -1,7 +1,7 @@
 # Ansible Playbooks for AWS Infrastructure & Jenkins Setup
 ## Pre-requirements
 ```shell
-- Configure AWS cli (aws account set-up with proper profile credentials/region needed).
+- Configure AWS cli (AWS account set-up with proper profile credentials/region needed).
 - Install Ansible
 ```
 ## Allocate Elastic IP
