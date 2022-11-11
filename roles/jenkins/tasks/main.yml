@@ -49,7 +49,7 @@
 
 - name: File basic-security.groovy should be copied to the directory init.groovy.d
   ansible.builtin.template:
-    src:  basic-security.groovy
+    src: basic-security.groovy
     dest: "/var/lib/jenkins/init.groovy.d"
     owner: root
     group: root
