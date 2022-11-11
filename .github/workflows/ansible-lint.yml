@@ -37,7 +37,7 @@ jobs:
         #                         rules directories specified with -r. There is no need
         #                         to specify this if no -r flags are used
         #   -t TAGS               only check rules whose id/tags match these values
-        #   -x SKIP_LIST          only check rules whose id/tags do not match these
+        SKIP_LIST: "jenkins_plugin"
         #                         values
         #   --nocolor             disable colored output
         #   --exclude=EXCLUDE_PATHS
