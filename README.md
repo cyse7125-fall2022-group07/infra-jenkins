@@ -16,7 +16,7 @@ ansible-playbook playbooks/jenkins_infra/setup.yml -e "aws_profile=profile ec2_i
 ```shell
 ansible-playbook playbooks/jenkins_infra/teardown.yml -e "aws_profile=profile ec2_image=image-id aws_region=region domain=domainname sub_domain=subdomainname group_name=groupname email=useremailaddress ec2_keypair=keyname ec2_instance_type=instancetype"
 ```
-## Manage nginx, certbot and to use installed Certbot to generate certificates using following command
+## Manage Jenkins Plugins, nginx, certbot and to use installed Certbot to generate certificates using following command
 ```shell
-ansible-playbook playbooks/jenkins.yml -e "sub_domain=subdomainname email=useremailaddress"
+ansible-playbook playbooks/jenkins.yml -e "sub_domain=subdomainname email=useremailaddress user=admin user_password=password"
 ```

@@ -119,9 +119,9 @@
       app: jenkins
   register: jenkins_ec2_instance
 
-- name: Sleep for 60 seconds and continue with play
+- name: Sleep for 10 seconds and continue with play
   ansible.builtin.wait_for:
-    timeout: 60
+    timeout: 10
   delegate_to: localhost
 
 - name: "Getting Reserved IP"
@@ -132,9 +132,9 @@
       tag:Name: elastic-ip
   register: ip4_address
 
-- name: Sleep for 10 seconds and continue with play
+- name: Sleep for 30 seconds and continue with play
   ansible.builtin.wait_for:
-    timeout: 10
+    timeout: 30
   delegate_to: localhost
 
 - name: Gather EC2 instance facts
@@ -146,9 +146,9 @@
       "instance-state-name": "running"
   register: jenkins_existing_ec2_instances
 
-- name: Sleep for 30 seconds and continue with play
+- name: Sleep for 10 seconds and continue with play
   ansible.builtin.wait_for:
-    timeout: 30
+    timeout: 10
   delegate_to: localhost
 
 - name: Associate an elastic IP

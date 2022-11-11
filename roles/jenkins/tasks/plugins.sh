@@ -1,8 +1,10 @@
 #!/bin/bash
+
 declare -a PluginList=(
     "blueocean"
-    "gitea" 
-    "kubernetes" 
+    "gitea"
+    "kubernetes"
+    "semantic-versioning-plugin"
 )
 
 for plugin in ${PluginList[@]}; do

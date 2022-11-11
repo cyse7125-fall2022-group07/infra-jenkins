@@ -25,6 +25,130 @@
 
 - name: Use Certbot to generate certificates
   ansible.builtin.shell: |
-     certbot --nginx -d {{ sub_domain }} --non-interactive --agree-tos -m {{ email }}
+     certbot --nginx -d {{ sub_domain }} --test-cert --non-interactive --agree-tos -m {{ email }}
   changed_when: false
   become: true
+
+- name: Disable jenkins setup wizard
+  become: true
+  lineinfile:
+    path: /etc/default/jenkins
+    line: JAVA_ARGS="-Djava.awt.headless=true -Djenkins.install.runSetupWizard=false"
+
+- name: Create groovy init directory
+  become: true
+  file:
+    path: /var/lib/jenkins/init.groovy.d
+    state: directory
+    mode: '0777'
+
+- name: Create groovy init file
+  become: true
+  copy:
+    dest: "/var/lib/jenkins/init.groovy.d/basic-security.groovy"
+    content: |
+      #!groovy
+      import jenkins.model.*
+      import hudson.security.*
+      import hudson.util.*
+      import jenkins.install.*
+      def instance = Jenkins.getInstance()
+      instance.setInstallState(InstallState.INITIAL_SETUP_COMPLETED)
+      println "--> creating local user 'admin'"
+      def hudsonRealm = new HudsonPrivateSecurityRealm(false)
+      hudsonRealm.createAccount('${user}','${user_password}')
+      instance.setSecurityRealm(hudsonRealm)
+      def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
+      instance.setAuthorizationStrategy(strategy)
+      instance.save()
+
+- name: Enable and start jenkins service
+  service:
+    name: jenkins
+    enabled: yes
+    state: started
+
+- name: Wait for Jenkins to start up before proceeding.
+  uri:
+    url: "http://localhost:8080"
+    method: GET
+    return_content: "yes"
+    timeout: 5
+    body_format: raw
+    follow_redirects: "no"
+    status_code: 200,403
+  register: result
+  until: (result.status == 403 or result.status == 200) and (result.content.find("Please wait while") == -1)
+  retries: 60
+  delay: 5
+  changed_when: false
+  check_mode: false
+
+- name: Download Plugins script into ubuntu home directory
+  become: true
+  get_url:
+    url:  
+    dest: /home/ubuntu
+    mode: '0777'
+
+- name: Restart jenkins service
+  become: true
+  service:
+    name: jenkins
+    state: restarted
+
+- name: Wait for Jenkins to start up before proceeding.
+  uri:
+    url: "http://localhost:8080"
+    method: GET
+    return_content: "yes"
+    timeout: 5
+    body_format: raw
+    follow_redirects: "no"
+    status_code: 200,403
+  register: result
+  until: (result.status == 403 or result.status == 200) and (result.content.find("Please wait while") == -1)
+  retries: 60
+  delay: 5
+  changed_when: false
+  check_mode: false
+
+- name: Download jenkins cli into ubuntu home directory
+  become: true
+  get_url:
+    url: http://localhost:8080/jnlpJars/jenkins-cli.jar
+    dest: /home/ubuntu
+    mode: '0777'
+  retries: 5
+  delay: 5
+  register: result
+  until: result is succeeded
+
+- name: Run plugins scripts
+  become: true
+  shell: /home/ubuntu/plugins.sh
+  args:
+    executable: /bin/bash
+  register: plugins_script
+
+- name: Show installed plugins
+  debug:
+    var: plugins_script.stdout
+
+- name: Restart jenkins service
+  become: true
+  service:
+    name: jenkins
+    state: restarted
+
+- name: Delete groovy init file
+  become: true
+  file:
+    path: "/var/lib/jenkins/init.groovy.d/basic-security.groovy"
+    state: absent
+
+- name: Print Jenkins Password
+  ansible.builtin.command: cat /var/lib/jenkins/secrets/initialAdminPassword
+  changed_when: false
+  become: true
+
