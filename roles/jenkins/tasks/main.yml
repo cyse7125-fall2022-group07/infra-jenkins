@@ -64,7 +64,7 @@
 - name: Enable and start jenkins service
   ansible.builtin.service:
     name: jenkins
-    enabled: yes
+    enabled: true
     state: started
   become: true
 
@@ -126,6 +126,7 @@
 
 - name: Run plugins scripts
   become: true
+  changed_when: false
   ansible.builtin.shell: /home/ubuntu/plugins.sh
   args:
     executable: /bin/bash
