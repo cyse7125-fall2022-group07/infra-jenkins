@@ -37,3 +37,5 @@ vpc_security_groups:
           - 22
 group_name: ""
 email: ""
+user: ""
+user_password: ""
