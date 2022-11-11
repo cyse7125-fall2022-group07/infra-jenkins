@@ -18,5 +18,5 @@ ansible-playbook playbooks/jenkins_infra/teardown.yml -e "aws_profile=profile ec
 ```
 ## Manage Jenkins Plugins, nginx, certbot and to use installed Certbot to generate certificates using following command
 ```shell
-ansible-playbook playbooks/jenkins.yml -e "sub_domain=subdomainname email=useremailaddress user=admin user_password=password"
+ansible-playbook playbooks/jenkins.yml -e "sub_domain=subdomainname email=useremailaddress user=admin user_password=admin"
 ```

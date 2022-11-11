@@ -25,130 +25,89 @@
 
 - name: Use Certbot to generate certificates
   ansible.builtin.shell: |
-     certbot --nginx -d {{ sub_domain }} --test-cert --non-interactive --agree-tos -m {{ email }}
+     certbot --nginx -d {{ sub_domain }} --non-interactive --agree-tos -m {{ email }}
   changed_when: false
   become: true
 
-- name: Disable jenkins setup wizard
+- name: Print Jenkins Password
+  ansible.builtin.command: cat /var/lib/jenkins/secrets/initialAdminPassword
+  changed_when: false
   become: true
+
+- name: Jenkins setup wizard disable
   ansible.builtin.lineinfile:
     path: /etc/default/jenkins
     line: JAVA_ARGS="-Djava.awt.headless=true -Djenkins.install.runSetupWizard=false"
-
-- name: Create groovy init directory
   become: true
+
+- name: Make a directory called groovy init
   ansible.builtin.file:
     path: /var/lib/jenkins/init.groovy.d
     state: directory
+    mode: 0777
+  become: true
+
+- name: File basic-security.groovy should be copied to the directory init.groovy.d
+  ansible.builtin.template:
+    src:  basic-security.groovy
+    dest: "/var/lib/jenkins/init.groovy.d"
+    owner: root
+    group: root
     mode: '0777'
-
-- name: Create groovy init file
   become: true
-  ansible.builtin.copy:
-    dest: "/var/lib/jenkins/init.groovy.d/basic-security.groovy"
-    content: |
-      #!groovy
-      import jenkins.model.*
-      import hudson.security.*
-      import hudson.util.*
-      import jenkins.install.*
-      def instance = Jenkins.getInstance()
-      instance.setInstallState(InstallState.INITIAL_SETUP_COMPLETED)
-      def hudsonRealm = new HudsonPrivateSecurityRealm(false)
-      hudsonRealm.createAccount('${user}','${user_password}')
-      instance.setSecurityRealm(hudsonRealm)
-      def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
-      instance.setAuthorizationStrategy(strategy)
-      instance.save()
-
-- name: Enable and start jenkins service
-  ansible.builtin.service:
-    name: jenkins
-    enabled: true
-    state: started
-  become: true
-
-- name: Wait for Jenkins to start up before proceeding.
-  ansible.builtin.uri:
-    url: "http://localhost:8080"
-    method: GET
-    return_content: "yes"
-    timeout: 5
-    body_format: raw
-    follow_redirects: "no"
-    status_code: 200,403
-  register: result
-  until: (result.status == 403 or result.status == 200) and (result.content.find("Please wait while") == -1)
-  retries: 60
-  delay: 5
   changed_when: false
-  check_mode: false
 
-- name: Download Plugins script into ubuntu home directory
-  become: true
-  ansible.builtin.get_url:
-    url:
-    dest: /home/ubuntu
+- name: Copy plugins.sh template to ubuntu directory
+  ansible.builtin.template:
+    src: plugins.sh
+    dest: "/home/ubuntu"
+    owner: root
+    group: root
     mode: '0777'
-
-- name: Restart jenkins service
   become: true
-  ansible.builtin.service:
-    name: jenkins
-    state: restarted
-
-- name: Wait for Jenkins to start up before proceeding.
-  ansible.builtin.uri:
-    url: "http://localhost:8080"
-    method: GET
-    return_content: "yes"
-    timeout: 5
-    body_format: raw
-    follow_redirects: "no"
-    status_code: 200,403
-  register: result
-  until: (result.status == 403 or result.status == 200) and (result.content.find("Please wait while") == -1)
-  retries: 60
-  delay: 5
   changed_when: false
-  check_mode: false
 
 - name: Download jenkins cli into ubuntu home directory
-  become: true
   ansible.builtin.get_url:
     url: http://localhost:8080/jnlpJars/jenkins-cli.jar
     dest: /home/ubuntu
     mode: '0777'
   retries: 5
   delay: 5
+  become: true
   register: result
   until: result is succeeded
 
 - name: Run plugins scripts
-  become: true
-  changed_when: false
-  ansible.builtin.shell: /home/ubuntu/plugins.sh
+  ansible.builtin.shell: "/home/ubuntu/plugins.sh {{user}} {{user_password}}"
   args:
     executable: /bin/bash
-  register: plugins_script
-
-- name: Show installed plugins
-  ansible.builtin.debug:
-    var: plugins_script.stdout
+  become: true
 
 - name: Restart jenkins service
-  become: true
   ansible.builtin.service:
     name: jenkins
     state: restarted
+  become: true
+
+- name: Before continuing, wait for Jenkins to launch.
+  ansible.builtin.uri:
+    url: "http://localhost:8080"
+    method: GET
+    return_content: "yes"
+    timeout: 5
+    body_format: raw
+    follow_redirects: "no"
+    status_code: 200,403
+  register: result
+  until: (result.status == 403 or result.status == 200) and (result.content.find("Please wait while") == -1)
+  retries: 60
+  delay: 5
+  changed_when: false
+  check_mode: false
 
 - name: Delete groovy init file
-  become: true
   ansible.builtin.file:
     path: "/var/lib/jenkins/init.groovy.d/basic-security.groovy"
     state: absent
-
-- name: Print Jenkins Password
-  ansible.builtin.command: cat /var/lib/jenkins/secrets/initialAdminPassword
-  changed_when: false
   become: true
