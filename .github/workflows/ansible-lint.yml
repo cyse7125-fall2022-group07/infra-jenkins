@@ -37,11 +37,11 @@ jobs:
         #                         rules directories specified with -r. There is no need
         #                         to specify this if no -r flags are used
         #   -t TAGS               only check rules whose id/tags match these values
-        SKIP_LIST: "jenkins_plugin"
+        #   -x SKIP_LIST          only check rules whose id/tags do not match these
         #                         values
         #   --nocolor             disable colored output
         #   --exclude=EXCLUDE_PATHS
         #                         path to directories or files to skip. This option is
         #                         repeatable.
         #   -c C                  Specify configuration file to use. Defaults to ".ansible-lint"
-        args: "-q"
+        args: "-x"
