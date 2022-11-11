@@ -79,7 +79,7 @@
   until: result is succeeded
 
 - name: Run plugins scripts
-  ansible.builtin.shell: "/home/ubuntu/plugins.sh {{user}} {{user_password}}"
+  ansible.builtin.shell: "/home/ubuntu/plugins.sh {{ user }} {{ user_password }}"
   args:
     executable: /bin/bash
   become: true
