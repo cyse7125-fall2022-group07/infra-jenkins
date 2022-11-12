@@ -134,11 +134,14 @@
     - jsch
     - junit
     - ldap
+    - thinbackup
     - lockable-resources
     - mailer
+    - maven
     - matrix-auth
     - matrix-project
     - momentjs
+    - build-pipeline-plugin
     - okhttp-api
     - pam-auth
     - pipeline-build-step
