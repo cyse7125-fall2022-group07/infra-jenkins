@@ -9,12 +9,6 @@ jobs:
     # Important: This sets up your GITHUB_WORKSPACE environment variable
     - uses: actions/checkout@v2
 
-    - name: Run script file for Linting
-      run: |
-        pwd
-        ansible-lint .
-      shell: bash
-
     # - name: Lint Ansible Playbook
     #   # replace "master" with any valid ref
     #   uses: ansible/ansible-lint-action@main
