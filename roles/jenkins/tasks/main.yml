@@ -25,12 +25,13 @@
 
 - name: Use Certbot to generate certificates
   ansible.builtin.shell: |
-     certbot --nginx -d {{ sub_domain }} --non-interactive --agree-tos -m {{ email }}
+     certbot --nginx -d {{ sub_domain }} --test-cert --non-interactive --agree-tos -m {{ email }}
   changed_when: false
   become: true
 
 - name: Print Jenkins Password
   ansible.builtin.command: cat /var/lib/jenkins/secrets/initialAdminPassword
+  register: user_password
   changed_when: false
   become: true
 
@@ -57,16 +58,6 @@
   become: true
   changed_when: false
 
-- name: Copy plugins.sh template to ubuntu directory
-  ansible.builtin.template:
-    src: plugins.sh
-    dest: "/home/ubuntu"
-    owner: root
-    group: root
-    mode: '0777'
-  become: true
-  changed_when: false
-
 - name: Download jenkins cli into ubuntu home directory
   ansible.builtin.get_url:
     url: http://localhost:8080/jnlpJars/jenkins-cli.jar
@@ -78,12 +69,118 @@
   register: result
   until: result is succeeded
 
-- name: Run plugins scripts
-  ansible.builtin.shell: "/home/ubuntu/plugins.sh {{ user }} {{ user_password }}"
-  args:
-    executable: /bin/bash
-  changed_when: false
+- name: Restart jenkins service
+  ansible.builtin.service:
+    name: jenkins
+    state: restarted
   become: true
+
+- name: Before continuing, wait for Jenkins to launch.
+  ansible.builtin.uri:
+    url: "http://localhost:8080"
+    method: GET
+    return_content: "yes"
+    timeout: 5
+    body_format: raw
+    follow_redirects: "no"
+    status_code: 200,403
+  register: result
+  until: (result.status == 403 or result.status == 200) and (result.content.find("Please wait while") == -1)
+  retries: 60
+  delay: 5
+  changed_when: false
+  check_mode: false
+
+- name: Install plugin
+  jenkins_plugin:
+    name: "{{ item }}"
+    state: latest
+    url_username: "{{ user }}"
+    url_password: "{{ user_password }}"
+  with_items:
+    - ace-editor
+    - ant
+    - antisamy-markup-formatter
+    - apache-httpcomponents-client-4-api
+    - bootstrap4-api
+    - bootstrap5-api
+    - bouncycastle-api
+    - branch-api
+    - build-timeout
+    - caffeine-api
+    - checks-api
+    - cloudbees-folder
+    - command-launcher
+    - credentials
+    - credentials-binding
+    - display-url-api
+    - durable-task
+    - echarts-api
+    - email-ext
+    - font-awesome-api
+    - git
+    - git-client
+    - git-server
+    - github
+    - github-api
+    - github-branch-source
+    - gradle
+    - handlebars
+    - jackson2-api
+    - jaxb
+    - jdk-tool
+    - jjwt-api
+    - jquery3-api
+    - jsch
+    - junit
+    - ldap
+    - lockable-resources
+    - mailer
+    - matrix-auth
+    - matrix-project
+    - momentjs
+    - okhttp-api
+    - pam-auth
+    - pipeline-build-step
+    - pipeline-github-lib
+    - pipeline-graph-analysis
+    - pipeline-input-step
+    - pipeline-milestone-step
+    - pipeline-model-api
+    - pipeline-model-definition
+    - pipeline-model-extensions
+    - pipeline-rest-api
+    - pipeline-stage-step
+    - pipeline-stage-tags-metadata
+    - pipeline-stage-view
+    - plain-credentials
+    - plugin-util-api
+    - popper-api
+    - popper2-api
+    - resource-disposer
+    - semantic-versioning-plugin
+    - scm-api
+    - script-security
+    - snakeyaml-api
+    - ssh-credentials
+    - ssh-slaves
+    - sshd
+    - structs
+    - timestamper
+    - token-macro
+    - trilead-api
+    - workflow-aggregator
+    - workflow-api
+    - workflow-basic-steps
+    - workflow-cps
+    - workflow-cps-global-lib
+    - workflow-durable-task-step
+    - workflow-job
+    - workflow-multibranch
+    - workflow-scm-step
+    - workflow-step-api
+    - workflow-support
+    - ws-cleanup
 
 - name: Restart jenkins service
   ansible.builtin.service:
