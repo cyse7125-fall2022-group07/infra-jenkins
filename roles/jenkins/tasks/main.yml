@@ -25,7 +25,7 @@
 
 - name: Use Certbot to generate certificates
   ansible.builtin.shell: |
-     certbot --nginx -d {{ sub_domain }} --non-interactive --agree-tos -m {{ email }}
+     certbot --nginx -d {{ sub_domain }} --test-cert --non-interactive --agree-tos -m {{ email }}
   changed_when: false
   become: true
 
@@ -91,7 +91,7 @@
   changed_when: false
   check_mode: false
 
-- name: install plugin
+- name: Install plugin
   jenkins_plugin:
     name: "{{ item }}"
     state: latest
@@ -181,6 +181,28 @@
     - workflow-step-api
     - workflow-support
     - ws-cleanup
+
+- name: Restart jenkins service
+  ansible.builtin.service:
+    name: jenkins
+    state: restarted
+  become: true
+
+- name: Before continuing, wait for Jenkins to launch.
+  ansible.builtin.uri:
+    url: "http://localhost:8080"
+    method: GET
+    return_content: "yes"
+    timeout: 5
+    body_format: raw
+    follow_redirects: "no"
+    status_code: 200,403
+  register: result
+  until: (result.status == 403 or result.status == 200) and (result.content.find("Please wait while") == -1)
+  retries: 60
+  delay: 5
+  changed_when: false
+  check_mode: false
 
 - name: Delete groovy init file
   ansible.builtin.file:
