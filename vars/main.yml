@@ -35,7 +35,14 @@ vpc_security_groups:
         cidr_ip: 0.0.0.0/0
         ports:
           - 22
+ANSIBLE_HOST_KEY_CHECKING: False
+url_repo: ""
 group_name: ""
 email: ""
 user: ""
 user_password: ""
+job: ""
+password: ""
+github_username: ""
+github_token: ""
+branches: ""
