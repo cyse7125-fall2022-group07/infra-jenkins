@@ -54,7 +54,7 @@
     dest: "/var/lib/jenkins/init.groovy.d"
     owner: root
     group: root
-    mode: '0777'
+    mode: 0777
   become: true
   changed_when: false
 
@@ -62,7 +62,7 @@
   ansible.builtin.get_url:
     url: http://localhost:8080/jnlpJars/jenkins-cli.jar
     dest: /home/ubuntu
-    mode: '0777'
+    mode: 0777
   retries: 5
   delay: 5
   become: true
@@ -97,6 +97,7 @@
     state: latest
     url_username: "{{ user }}"
     url_password: "{{ user_password }}"
+  become: true
   with_items:
     - ace-editor
     - ant
@@ -107,6 +108,7 @@
     - bouncycastle-api
     - branch-api
     - build-timeout
+    - build-pipeline-plugin
     - caffeine-api
     - checks-api
     - cloudbees-folder
@@ -141,7 +143,7 @@
     - matrix-auth
     - matrix-project
     - momentjs
-    - build-pipeline-plugin
+    - nodejs
     - okhttp-api
     - pam-auth
     - pipeline-build-step
@@ -212,3 +214,33 @@
     path: "/var/lib/jenkins/init.groovy.d/basic-security.groovy"
     state: absent
   become: true
+
+- name: Ensure pip3 is installed
+  apt:
+    name: python3-pip
+    cache_valid_time: "{{ apt_cache_valid_time|default(omit) }}"
+    install_recommends: no
+    state: latest
+    update_cache: yes
+  become: true
+
+- name: install python-jenkins
+  command: pip install python-jenkins
+  become: true
+
+
+- name: Create a jenkins job using basic authentication
+  community.general.jenkins_job:
+    config: "{{ lookup('file', 'templates/jenkinsjob.xml.j2') }}"
+    name: "{{ job }}"
+    password: "{{ user_password }}"
+    url: http://localhost:8080
+    user: "{{ user }}"
+
+# - name: Create a jenkins job using the token
+#   community.general.jenkins_job:
+#     config: "{{ lookup('template', 'templates/jenkinsjob.xml.j2') }}"
+#     name: "{{ job }}"
+#     token: "{{github_token}}"
+#     url: http://localhost:8080
+#     user: "{{ user }}"

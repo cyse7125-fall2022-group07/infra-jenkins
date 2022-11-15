@@ -5,12 +5,9 @@ upstream jenkins {
       server {
               listen 80 default_server;
               listen [::]:80 default_server;
-
               root /var/www/html;
               index index.html index.htm index.nginx-debian.html;
-
               server_name {{ sub_domain }};
-
               location / {
                       proxy_set_header        Host $host:$server_port;
                       proxy_set_header        X-Real-IP $remote_addr;
