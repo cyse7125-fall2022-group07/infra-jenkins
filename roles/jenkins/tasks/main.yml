@@ -80,14 +80,14 @@
     url: "http://localhost:8080"
     method: GET
     return_content: "yes"
-    timeout: 5
+    timeout: 20
     body_format: raw
     follow_redirects: "no"
     status_code: 200,403
   register: result
   until: (result.status == 403 or result.status == 200) and (result.content.find("Please wait while") == -1)
   retries: 60
-  delay: 5
+  delay: 20
   changed_when: false
   check_mode: false
 
@@ -231,16 +231,10 @@
 
 - name: Create a jenkins job using basic authentication
   community.general.jenkins_job:
-    config: "{{ lookup('file', 'templates/jenkinsjob.xml.j2') }}"
+    config: "{{ lookup('template', 'templates/jenkinsjob.xml.j2') }}"
     name: "{{ job }}"
-    password: "{{ user_password }}"
-    url: http://localhost:8080
     user: "{{ user }}"
+    password: "{{ user_password }}"
+    url: "http://localhost:8080"
+   
 
-# - name: Create a jenkins job using the token
-#   community.general.jenkins_job:
-#     config: "{{ lookup('template', 'templates/jenkinsjob.xml.j2') }}"
-#     name: "{{ job }}"
-#     token: "{{github_token}}"
-#     url: http://localhost:8080
-#     user: "{{ user }}"
