@@ -116,6 +116,10 @@
     - credentials
     - credentials-binding
     - display-url-api
+    - docker-plugin
+    - docker-commons
+    - docker-workflow
+    - docker-java-api
     - durable-task
     - echarts-api
     - email-ext
