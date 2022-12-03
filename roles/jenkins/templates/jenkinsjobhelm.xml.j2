@@ -8,13 +8,13 @@
     <configVersion>2</configVersion>
     <userRemoteConfigs>
     <hudson.plugins.git.UserRemoteConfig>
-    <url>https://github.com/cyse7125-fall2022-group07/helm-chart.git</url>
-    <credentialsId>84cf3ad5-9c20-4c35-af72-71a3f02a9c75</credentialsId>
+    <url>{{ url_repo1 }}</url>
+    <credentialsId>{{ github_token }}</credentialsId>
     </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>
     <hudson.plugins.git.BranchSpec>
-    <name>main</name>
+    <name>{{ branches }}</name>
     </hudson.plugins.git.BranchSpec>
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>

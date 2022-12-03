@@ -232,7 +232,6 @@
   command: pip install python-jenkins
   become: true
 
-
 - name: Create a jenkins job using basic authentication
   community.general.jenkins_job:
     config: "{{ lookup('template', 'templates/jenkinsjob.xml.j2') }}"
@@ -240,5 +239,13 @@
     user: "{{ user }}"
     password: "{{ user_password }}"
     url: "http://localhost:8080"
-   
+
+- name: Create a jenkins helm job using basic authentication
+  community.general.jenkins_job:
+    config: "{{ lookup('template', 'templates/jenkinsjobhelm.xml.j2') }}"
+    name: "{{ job1 }}"
+    user: "{{ user }}"
+    password: "{{ user_password }}"
+    url: "http://localhost:8080"
+
 
