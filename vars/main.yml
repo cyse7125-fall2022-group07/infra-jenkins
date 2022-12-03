@@ -37,10 +37,12 @@ vpc_security_groups:
           - 22
 ANSIBLE_HOST_KEY_CHECKING: False
 url_repo: ""
+url_repo1: ""
 group_name: ""
 email: ""
 user: ""
 user_password: ""
 job: ""
+job1: ""
 github_token: ""
 branches: ""
