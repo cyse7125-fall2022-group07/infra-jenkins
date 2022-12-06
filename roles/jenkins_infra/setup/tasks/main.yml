@@ -18,6 +18,10 @@
       Name: "jenkins"
   register: jenkins_vpc
 
+- name: Print return information from the previous task
+  ansible.builtin.debug:
+    var: jenkins_vpc.vpc.id
+
 - name: Create Internet Gateway
   ec2_vpc_igw:
     state: present
@@ -49,6 +53,10 @@
       vpc-id: "{{ jenkins_vpc.vpc.id }}"
   register: jenkins_route_table
 
+- name: Print return information from the previous task
+  ansible.builtin.debug:
+    var: jenkins_route_table.route_tables[0].associations[0].route_table_id
+    
 - name: Update the route table in the vpc
   ec2_vpc_route_table:
     state: present
