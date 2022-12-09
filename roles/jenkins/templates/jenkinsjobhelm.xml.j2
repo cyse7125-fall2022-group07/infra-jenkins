@@ -1,29 +1,91 @@
 <flow-definition plugin="workflow-job@1254.v3f64639b_11dd">
-    <actions/>
-    <description/>
-    <keepDependencies>false</keepDependencies>
-    <properties/>
-    <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@3536.vb_8a_6628079d5">
-    <scm class="hudson.plugins.git.GitSCM" plugin="git@4.14.1">
-    <configVersion>2</configVersion>
-    <userRemoteConfigs>
-    <hudson.plugins.git.UserRemoteConfig>
-    <url>{{ url_repo1 }}</url>
-    <credentialsId>{{ github_token }}</credentialsId>
-    </hudson.plugins.git.UserRemoteConfig>
-    </userRemoteConfigs>
-    <branches>
-    <hudson.plugins.git.BranchSpec>
-    <name>{{ branches }}</name>
-    </hudson.plugins.git.BranchSpec>
-    </branches>
-    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
-    <submoduleCfg class="empty-list"/>
-    <extensions/>
-    </scm>
-    <scriptPath>Jenkinsfile</scriptPath>
-    <lightweight>true</lightweight>
-    </definition>
-    <triggers/>
-    <disabled>false</disabled>
-    </flow-definition>
+	<actions />
+	<description />
+	<keepDependencies>
+		false
+	</keepDependencies>
+	<properties>
+		<EnvInjectJobProperty plugin="envinject@2.892.v25453b_80e595">
+			<info>
+				<propertiesContent>
+					AWS_ACCESS_KEY_ID={{ AWS_ACCESS_KEY_ID }}
+					AWS_DEFAULT_REGION=us-east-1 
+					AWS_SECRET_ACCESS_KEY={{ AWS_SECRET_ACCESS_KEY }} 
+					CLUSTER_NAME={{ CLUSTER_NAME }} 
+					DB_HOST={{ DB_HOST }} 
+					DB_NAME=rdsdbcsye7125 
+					DB_PASSWORD=Y3N5ZTcxMjVwYXNz 
+					DB_USER=Y3N5ZTcxMjU= 
+					WEBAPPDOCKER_REPO=csye7125fall2022group07/todo-app 
+					elastic_endpoint={{ elastic_endpoint }} 
+					FLYWAY_ENDPOINT={{ FLYWAY_ENDPOINT }} 
+					image=csye7125fall2022group07/db-migrate-flyway:v2 
+					kafka_broker={{ kafka_broker }} 
+					KOPS_STATE_STORE={{ KOPS_STATE_STORE }} 
+					NODE_ENV=webapp 
+					repository=csye7125fall2022group07/todo-app:latest
+				</propertiesContent>
+				<secureGroovyScript plugin="script-security@1228.vd93135a_2fb_25">
+					<script />
+					<sandbox>
+						false
+					</sandbox>
+				</secureGroovyScript>
+				<loadFilesFromMaster>
+					false
+				</loadFilesFromMaster>
+			</info>
+			<on>
+				true
+			</on>
+			<keepJenkinsSystemVariables>
+				true
+			</keepJenkinsSystemVariables>
+			<keepBuildVariables>
+				true
+			</keepBuildVariables>
+			<overrideBuildParameters>
+				true
+			</overrideBuildParameters>
+		</EnvInjectJobProperty>
+	</properties>
+	<definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@3565.v4b_d9b_8c29a_b_3">
+		<scm class="hudson.plugins.git.GitSCM" plugin="git@4.14.2">
+			<configVersion>
+				2
+			</configVersion>
+			<userRemoteConfigs>
+				<hudson.plugins.git.UserRemoteConfig>
+					<url>
+						{{ url_repo1 }}
+					</url>
+					<credentialsId>
+						{{ github_token }}
+					</credentialsId>
+				</hudson.plugins.git.UserRemoteConfig>
+			</userRemoteConfigs>
+			<branches>
+				<hudson.plugins.git.BranchSpec>
+					<name>
+						{{ branches }}
+					</name>
+				</hudson.plugins.git.BranchSpec>
+			</branches>
+			<doGenerateSubmoduleConfigurations>
+				false
+			</doGenerateSubmoduleConfigurations>
+			<submoduleCfg class="empty-list" />
+			<extensions />
+		</scm>
+		<scriptPath>
+			Jenkinsfile
+		</scriptPath>
+		<lightweight>
+			true
+		</lightweight>
+	</definition>
+	<triggers />
+	<disabled>
+		false
+	</disabled>
+</flow-definition>
