@@ -25,7 +25,7 @@
 
 - name: Use Certbot to generate certificates
   ansible.builtin.shell: |
-     certbot --nginx -d {{ sub_domain }} --non-interactive --agree-tos -m {{ email }}
+    certbot --nginx -d {{ sub_domain }} --test-cert --non-interactive --agree-tos -m {{ email }}
   changed_when: false
   become: true
 
@@ -122,6 +122,7 @@
     - docker-java-api
     - durable-task
     - echarts-api
+    - envinject
     - email-ext
     - font-awesome-api
     - git
