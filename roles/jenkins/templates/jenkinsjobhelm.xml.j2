@@ -1,91 +1,74 @@
 <flow-definition plugin="workflow-job@1254.v3f64639b_11dd">
-	<actions />
-	<description />
-	<keepDependencies>
-		false
-	</keepDependencies>
-	<properties>
-		<EnvInjectJobProperty plugin="envinject@2.892.v25453b_80e595">
-			<info>
-				<propertiesContent>
-					AWS_ACCESS_KEY_ID={{ AWS_ACCESS_KEY_ID }}
-					AWS_DEFAULT_REGION=us-east-1 
-					AWS_SECRET_ACCESS_KEY={{ AWS_SECRET_ACCESS_KEY }} 
-					CLUSTER_NAME={{ CLUSTER_NAME }} 
-					DB_HOST={{ DB_HOST }} 
-					DB_NAME=rdsdbcsye7125 
-					DB_PASSWORD=Y3N5ZTcxMjVwYXNz 
-					DB_USER=Y3N5ZTcxMjU= 
-					WEBAPPDOCKER_REPO=csye7125fall2022group07/todo-app 
-					elastic_endpoint={{ elastic_endpoint }} 
-					FLYWAY_ENDPOINT={{ FLYWAY_ENDPOINT }} 
-					image=csye7125fall2022group07/db-migrate-flyway:v2 
-					kafka_broker={{ kafka_broker }} 
-					KOPS_STATE_STORE={{ KOPS_STATE_STORE }} 
-					NODE_ENV=webapp
-					repository=csye7125fall2022group07/todo-app:latest
-				</propertiesContent>
-				<secureGroovyScript plugin="script-security@1228.vd93135a_2fb_25">
-					<script />
-					<sandbox>
-						false
-					</sandbox>
-				</secureGroovyScript>
-				<loadFilesFromMaster>
-					false
-				</loadFilesFromMaster>
-			</info>
-			<on>
-				true
-			</on>
-			<keepJenkinsSystemVariables>
-				true
-			</keepJenkinsSystemVariables>
-			<keepBuildVariables>
-				true
-			</keepBuildVariables>
-			<overrideBuildParameters>
-				true
-			</overrideBuildParameters>
-		</EnvInjectJobProperty>
-	</properties>
-	<definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@3565.v4b_d9b_8c29a_b_3">
-		<scm class="hudson.plugins.git.GitSCM" plugin="git@4.14.2">
-			<configVersion>
-				2
-			</configVersion>
-			<userRemoteConfigs>
-				<hudson.plugins.git.UserRemoteConfig>
-					<url>
-						{{ url_repo1 }}
-					</url>
-					<credentialsId>
-						{{ github_token }}
-					</credentialsId>
-				</hudson.plugins.git.UserRemoteConfig>
-			</userRemoteConfigs>
-			<branches>
-				<hudson.plugins.git.BranchSpec>
-					<name>
-						{{ branches }}
-					</name>
-				</hudson.plugins.git.BranchSpec>
-			</branches>
-			<doGenerateSubmoduleConfigurations>
-				false
-			</doGenerateSubmoduleConfigurations>
-			<submoduleCfg class="empty-list" />
-			<extensions />
-		</scm>
-		<scriptPath>
-			Jenkinsfile
-		</scriptPath>
-		<lightweight>
-			true
-		</lightweight>
-	</definition>
-	<triggers />
-	<disabled>
-		false
-	</disabled>
+<actions/>
+<description/>
+<keepDependencies>false</keepDependencies>
+<properties>
+<jenkins.model.BuildDiscarderProperty>
+<strategy class="hudson.tasks.LogRotator">
+<daysToKeep>-1</daysToKeep>
+<numToKeep>2</numToKeep>
+<artifactDaysToKeep>-1</artifactDaysToKeep>
+<artifactNumToKeep>-1</artifactNumToKeep>
+</strategy>
+</jenkins.model.BuildDiscarderProperty>
+<EnvInjectJobProperty plugin="envinject@2.892.v25453b_80e595">
+<info>
+<propertiesContent>
+AWS_DEFAULT_REGION=us-east-1
+CLUSTER_NAME=prd.aws.vinitharsora.me
+DB_HOST=rdsdbcsye7125.cutj6xdrluzf.us-east-1.rds.amazonaws.com
+DB_NAME=rdsdbcsye7125
+DB_PASSWORD=Y3N5ZTcxMjVwYXNz
+DB_USER=Y3N5ZTcxMjU=
+WEBAPPDOCKER_REPO=csye7125fall2022group07/todo-app
+elastic_endpoint=http://a05a5ea5be11443a9933d5b4a4c45497-1526134253.us-east-1.elb.amazonaws.com:9200
+FLYWAY_ENDPOINT=jdbc:postgresql://rdsdbcsye7125.cutj6xdrluzf.us-east-1.rds.amazonaws.com:5432/rdsdbcsye7125
+image=csye7125fall2022group07/db-migrate-flyway:v2
+kafka_broker=aa63f7340eb83418883fb3fcf1e436ae-506258924.us-east-1.elb.amazonaws.com:9094
+KOPS_STATE_STORE=s3://prd-csye7125-bucket
+NODE_ENV=webapp
+repository=csye7125fall2022group07/todo-app
+</propertiesContent>
+<secureGroovyScript plugin="script-security@1228.vd93135a_2fb_25">
+<script/>
+<sandbox>false</sandbox>
+</secureGroovyScript>
+<loadFilesFromMaster>false</loadFilesFromMaster>
+</info>
+<on>true</on>
+<keepJenkinsSystemVariables>true</keepJenkinsSystemVariables>
+<keepBuildVariables>true</keepBuildVariables>
+<overrideBuildParameters>false</overrideBuildParameters>
+</EnvInjectJobProperty>
+<org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+<triggers>
+<com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.36.0">
+<spec/>
+</com.cloudbees.jenkins.GitHubPushTrigger>
+</triggers>
+</org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+</properties>
+<definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@3565.v4b_d9b_8c29a_b_3">
+<scm class="hudson.plugins.git.GitSCM" plugin="git@4.14.2">
+<configVersion>2</configVersion>
+<userRemoteConfigs>
+<hudson.plugins.git.UserRemoteConfig>
+<url>https://github.com/cyse7125-fall2022-group07/webapp.git</url>
+<credentialsId>admin</credentialsId>
+</hudson.plugins.git.UserRemoteConfig>
+</userRemoteConfigs>
+<branches>
+<hudson.plugins.git.BranchSpec>
+<name>main</name>
+</hudson.plugins.git.BranchSpec>
+</branches>
+<doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+<submoduleCfg class="empty-list"/>
+<extensions/>
+</scm>
+<scriptPath>Jenkinsfile</scriptPath>
+<lightweight>false</lightweight>
+</definition>
+<triggers/>
+<disabled>false</disabled>
 </flow-definition>
